@@ -1,0 +1,6 @@
+#PDF and log files
+*.pdf
+*.log
+
+#Executables
+/devel-tls/get-start/simpleclient
