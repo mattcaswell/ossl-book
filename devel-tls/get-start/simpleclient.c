@@ -4,75 +4,72 @@
 #include <netinet/in.h>
 #include <openssl/ssl.h>
 
+static int create_tcp_connection(const char *servername, int port);
+
 int main(void)
 {
-    SSL_CTX *ctx = NULL;
-    SSL *ssl = NULL;
-    int sock = -1;
-    int ret = 1;
-    struct sockaddr_in servaddr;
-    X509_VERIFY_PARAM *param;
-    const char *servername = "127.0.0.1";
-    const char *msg = "Hello World!";
+   SSL_CTX *ctx = NULL;
+   SSL *ssl = NULL;
+   int sock = -1, ret = 1;
+   X509_VERIFY_PARAM *param;
+   const char *servername = "127.0.0.1", *msg = "Hello World!";
 
-    /* Initialise libssl */
-    SSL_load_error_strings();
-    SSL_library_init();
+   /* Initialise libssl */
+   SSL_load_error_strings();
+   SSL_library_init();
 
-    /*
-     * In versions prior to 1.1.0 you should use SSLv23_client_method() instead
-     * of TLS_client_method(). They are equivalent but the new name is
-     * preferred.
-     */
-    ctx = SSL_CTX_new(TLS_client_method());
-    if (ctx == NULL)
-        goto err;
+   /* Prior to 1.1.0 use SSLv23_client_method() */
+   ctx = SSL_CTX_new(TLS_client_method());
+   if (ctx == NULL) goto err;
+   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
 
-    /* Create a TCP connection to 127.0.01:443 */
-    /* TODO: CHECK FOR ERRORS */
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock == -1)
-        goto err;
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr(servername);
-    servaddr.sin_port = htons(443);
-    if (connect(sock, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1)
-        goto err;
+   /* Create a TCP connection to 127.0.01:443 */
+   sock = create_tcp_connection(servername, 443);
+   if (sock == -1) goto err;
 
-    /* Create an SSL object for the connection */
-    ssl = SSL_new(ctx);
-    if (ssl == NULL || SSL_set_fd(ssl, sock) == 0)
-        goto err;
+   /* Create an SSL object for the connection */
+   ssl = SSL_new(ctx);
+   if (ssl == NULL || SSL_set_fd(ssl, sock) == 0) goto err;
 
-    /* Set up the checks that we require on the server certificate */
-    param = SSL_get0_param(ssl);
-    if (X509_VERIFY_PARAM_set1_host(param, servername, 0) == 0)
-        goto err;
-    SSL_set_verify(ssl, SSL_VERIFY_PEER, 0);
+   /* Set the server hostname for this SSL object */
+   param = SSL_get0_param(ssl);
+   if (X509_VERIFY_PARAM_set1_host(param, servername, 0) == 0)
+      goto err;
 
-    /* Create an SSL/TLS connection to the server */
-    if (SSL_connect(ssl) <= 0)
-        goto err;
+   /* Create an SSL/TLS connection to the server */
+   if (SSL_connect(ssl) <= 0) goto err;
 
-    /* Send some data to the server */
-    if (SSL_write(ssl, msg, strlen(msg)) <= 0)
-        goto err;
+   /* Send some data to the server */
+   if (SSL_write(ssl, msg, strlen(msg)) <= 0) goto err;
 
-    /* Success! */
-    ret = 0;
+   ret = 0; /* Success! */
  err:
-    if (ret != 0)
-        ERR_print_errors_fp(stderr);
+   if (ret != 0) ERR_print_errors_fp(stderr);
+   /* Clean up */
+   if (ssl != NULL) SSL_shutdown(ssl);
+   SSL_free(ssl);
+   if (sock != -1) close(sock);
+   SSL_CTX_free(ctx);
+   /* TODO: Uninitalise library */
+   return ret;
+}
 
-    /* Clean up */
-    if (ssl != NULL) {
-        SSL_shutdown(ssl);
-        SSL_free(ssl);
-    }
-    if (sock != -1)
-        close(sock);
-    SSL_CTX_free(ctx);
+static int create_tcp_connection(const char *servername, int port)
+{
+   int sock;
+   struct sockaddr_in serv;
 
-    return ret;
+   sock = socket(AF_INET, SOCK_STREAM, 0);
+   if (sock == -1) return -1;
+   memset(&serv, 0, sizeof(serv));
+   serv.sin_family = AF_INET;
+   serv.sin_addr.s_addr = inet_addr(servername);
+   serv.sin_port = htons(port);
+   if (connect(sock, (struct sockaddr *)&serv,
+               sizeof(serv)) == -1) {
+      close(sock);
+      return -1;
+   }
+
+   return sock;
 }
