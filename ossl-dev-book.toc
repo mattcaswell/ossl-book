@@ -1,21 +1,21 @@
-\contentsline {part}{I\hspace {1em}Introduction}{5}
-\contentsline {chapter}{\numberline {1}About OpenSSL}{7}
-\contentsline {part}{II\hspace {1em}SSL/TLS/DTLS Application Programming}{9}
-\contentsline {chapter}{\numberline {2}Understanding SSL/TLS}{11}
-\contentsline {section}{\numberline {2.1}Establishing Identity}{12}
-\contentsline {section}{\numberline {2.2}Ciphersuites}{13}
-\contentsline {section}{\numberline {2.3}Records}{15}
-\contentsline {section}{\numberline {2.4}The Handshake}{16}
-\contentsline {chapter}{\numberline {3}Getting started}{19}
-\contentsline {section}{\numberline {3.1}Library Initialisation}{19}
-\contentsline {section}{\numberline {3.2}Creating an \texttt {SSL\_CTX}}{21}
-\contentsline {section}{\numberline {3.3}Connecting to a server}{23}
-\contentsline {subsection}{\numberline {3.3.1}Creating a self-signed certificate}{23}
-\contentsline {subsection}{\numberline {3.3.2}Starting the test server}{24}
-\contentsline {subsection}{\numberline {3.3.3}The client connection code}{24}
-\contentsline {section}{\numberline {3.4}Writing data}{26}
-\contentsline {section}{\numberline {3.5}Cleaning Up}{26}
-\contentsline {section}{\numberline {3.6}Compiling the application}{27}
-\contentsline {section}{\numberline {3.7}Running the application}{27}
-\contentsline {section}{\numberline {3.8}Adding Trusted CAs}{29}
-\contentsline {part}{III\hspace {1em}Cryptography Application Programming}{31}
+\contentsline {part}{I\hspace {1em}Introduction}{2}
+\contentsline {chapter}{\numberline {1}About OpenSSL}{3}
+\contentsline {part}{II\hspace {1em}SSL/TLS/DTLS Application Programming}{4}
+\contentsline {chapter}{\numberline {2}Understanding SSL/TLS}{5}
+\contentsline {section}{\numberline {2.1}Establishing Identity}{6}
+\contentsline {section}{\numberline {2.2}Ciphersuites}{7}
+\contentsline {section}{\numberline {2.3}Records}{9}
+\contentsline {section}{\numberline {2.4}The Handshake}{10}
+\contentsline {chapter}{\numberline {3}Getting started}{12}
+\contentsline {section}{\numberline {3.1}Library Initialisation}{12}
+\contentsline {section}{\numberline {3.2}Creating an \texttt {SSL\_CTX}}{14}
+\contentsline {section}{\numberline {3.3}Connecting to a server}{16}
+\contentsline {subsection}{\numberline {3.3.1}Creating a self-signed certificate}{16}
+\contentsline {subsection}{\numberline {3.3.2}Starting the test server}{17}
+\contentsline {subsection}{\numberline {3.3.3}The client connection code}{17}
+\contentsline {section}{\numberline {3.4}Writing data}{19}
+\contentsline {section}{\numberline {3.5}Cleaning Up}{19}
+\contentsline {section}{\numberline {3.6}Compiling the application}{20}
+\contentsline {section}{\numberline {3.7}Running the application}{20}
+\contentsline {section}{\numberline {3.8}Adding Trusted CAs}{22}
+\contentsline {part}{III\hspace {1em}Cryptography Application Programming}{23}
