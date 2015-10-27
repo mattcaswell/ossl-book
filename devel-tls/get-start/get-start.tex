@@ -7,11 +7,12 @@ connection. Don't worry if you don't understand all of the individual steps yet,
 we will cover them in the rest of this chapter. See Listing
 \ref{lst:hello-world-client}.
 
-\lstinputlisting[float=p,label=lst:hello-world-client,lastline=55,
+\lstinputlisting[float=p,label=lst:hello-world-client,lastline=61,
 caption=A simple ``Hello World'' client]
 {devel-tls/get-start/simpleclient.c}
 
 \section{Library Initialisation}
+\label{sec:getstart-library-init}
 
 Let's walk through this code sample step-by-step. Firstly we initialise 
 ``libssl''. OpenSSL provides two libraries ``libcrypto'' and ``libssl''. The 
@@ -157,3 +158,337 @@ that to \verb!NULL!.
 
 \section {Connecting to a server}
 
+Having set up our \verb!SSL_CTX! object, the next step is to connect to a
+server.  Before we can do that though we need to set up a server that we can
+use.  Fortunately openssl provides a test server for that purpose. However,
+before we  can use it, we need to create a certificate an private/public key
+pair.
+
+\subsection {Creating a self-signed certificate}
+
+We are going to create a new certificate for our test server which will be 
+``self-signed''. With a normal certificate a private/public key pair is
+generated and then the public key is published as part of the certificate, 
+which is then signed using the private key of the \emph{CA}. In a self-signed 
+certificate a CA is not used, but instead the certificate is signed by the 
+private key which is the pair of the public key in the certificate itself! 
+Self-signed certificates have the advantage that they are easy to produce 
+because you do not have to go through an external CA to get one. The 
+disadvantage is that you (usually) cannot use them on public servers because 
+they will not be trusted by clients. For our purposes a self-signed certificate 
+will be sufficient.
+
+First we create our private key. The algorithm we are going to use is  RSA with
+a key length of 2048 bits. The key can be created using the OpenSSL command line
+tool. The following command generates the key and stores it in the file 
+``server.key'':
+\begin{verbatim}
+openssl genrsa -out server.key 2048
+\end{verbatim}
+
+Note that in this example we are not encrypting the private key and securing it 
+with a password. For a real key you might wish to do that (e.g. by using the 
+\verb!-aes128! argument).
+
+Next we need to create a ``Certificate Signing Request'' (CSR). Typically this 
+is a file that is created for sending to a CA. However in this case we will use 
+it to create our self-signed certificate. The CSR generation process collects 
+together all of the information that you are requesting that the CA includes in 
+the certificate. Note that just because you have included something in a CSR 
+does not mean that the CA is obliged to include it in the certificate. We 
+create the CSR by using the OpenSSL \verb!req! command line tool. This will ask 
+a number of questions about the organisation that we are creating the CSR for. 
+The most important field here is the ``Common Name''. This should be set to the 
+fully qualified domain name for the server. Our test server is only going to be 
+used on our local machine, so we set this to 127.0.0.1. The following command 
+stores the CSR in the file ``server.csr'':
+
+\begin{verbatim}
+$ openssl req -new -key server.key -out server.csr
+You are about to be asked to enter information that will be inco\
+rporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Na\
+me or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:UK
+State or Province Name (full name) [Some-State]:Derbyshire
+Locality Name (eg, city) []:
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:Test
+Organizational Unit Name (eg, section) []:
+Common Name (e.g. server FQDN or YOUR name) []:127.0.0.1
+Email Address []:
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:
+An optional company name []:
+\end{verbatim}
+
+The final step is to generate the certificate based on the information 
+contained with the CSR file, and sign it with the private key that we generated 
+in the first step.
+
+\begin{verbatim}
+$ openssl x509 -req -days 365 -in server.csr \
+               -signkey server.key -out server.pem
+\end{verbatim}
+
+This command creates a certificate with a validity period of 365 days and 
+stores it in the file ``server.pem''.
+
+\subsection{Starting the test server}
+\label{sec:start-test-server}
+
+Now that we have created our self-signed certificate we can start up our test 
+server:
+
+\begin{verbatim}
+$ openssl s_server -key server.key -cert server.pem -accept 1443
+Using default temp DH parameters
+ACCEPT
+\end{verbatim}
+
+\subsection{The client connection code}
+
+In order to connect to a server from our code we first need to create a standard
+TCP connection. We used a helper function to do this in listing
+\ref{lst:hello-world-client} - \verb!create_tcp_connection()!. This takes two
+arguments: the IP address of the server to connect to; and the port number. This
+helper function is shown in listing \ref{lst:create-tcp-connection}. There is 
+nothing OpenSSL specific about how this works.
+
+\lstinputlisting[float=tb,label=lst:create-tcp-connection,firstline=63,
+caption=The \texttt{create\_tcp\_connection()} function]
+{devel-tls/get-start/simpleclient.c}
+
+Assuming this works successfully, the next step is to create our \verb!SSL! 
+object via a call to \verb!SSL_new!. This takes as an argument the 
+\verb!SSL_CTX! that we created earlier, and thus inherits any configuration 
+settings that we applied to it (such as the method to use, and the verification 
+settings). Once we have our \verb!SSL! object we then associate it with the 
+underlying TCP connection using \verb!SSL_set_fd()!.
+
+Now we have an \verb!SSL! object associated with an open TCP connection to the 
+server - but we have still not initiated the SSL/TLS handshake. Before we do so 
+there is one last thing that we need to set up. We have already configured (at 
+the \verb!SSL_CTX! level) the verification settings, i.e. we want to verify the 
+server certificate. However we have not told OpenSSL the hostname of the server 
+that we expect to be in the certificate. This is a \emph{very important} 
+security step. Without this OpenSSL will simply verify that the certificate
+presented is valid, but will allow any hostnames. To configure this we first 
+must get hold of the \verb!X509_VERIFY_PARAM!\footnote{X.509 is an ITU-T 
+standard for digital certificates. There have been a number of iterations of 
+the standard and we are currently on X.509v3. When we talk about a certificate 
+in the SSL/TLS context we are actually referring to an X.509 certificate. 
+Therefore the OpenSSL type \texttt{X509\_VERIFY\_PARAM} holds parameters for the 
+verification of X.509 digital certificates} object for our SSL/TLS connection 
+using \verb!SSL_get0_param()!\footnote{You will sometimes see OpenSSL APIs of 
+the form \texttt{get0}, \texttt{get1}, \texttt{set0} and \texttt{set1}. This
+tells you  who is responsible for ``freeing'' the memory associated with the
+value that  you get or set: 0 means the application should not free it; 1 means
+it should.}. Then we call \verb!X509_VERIFY_PARAM_set1_host()! and provide the 
+fully qualified domain name of the server we are connecting to (in this 
+example, for simplicity, we are just using an IP address). This is the domain
+name that  we expect to see in the certificate presented to us. If OpenSSL
+encounters a certificate with any other domain name then the connection will
+fail.
+
+The final connection step is to call \verb!SSL_connect()!. Strictly speaking
+this step is optional because a handshake will be forced as soon as you attempt
+to read or write to the \verb!SSL! object. However if you want to have more 
+control over when the handshake occurs you can call \verb!SSL_connect! 
+explicitly as shown in this example.
+
+\section{Writing data}
+
+Having established an SSL/TLS connection we can now start to use it. In the 
+example in listing \ref{lst:hello-world-client} we simply write a single 
+message to the connection using \verb!SSL_write()!. This takes three arguments:
+\begin{enumerate}
+\item the \texttt{SSL} object;
+\item a buffer containing the data to be sent; and
+\item a ``length'' parameter, i.e. the amount of data in the buffer to be sent.
+\end{enumerate}
+
+The data sent in this example is text, but \verb!SSL_write()! also supports 
+sending binary data. In this example the \verb!SSL_write()! call will
+\emph{block} (i.e. it will not return) until all of the data has been written
+to the connection, or a fatal error has occurred. OpenSSL also supports
+\emph{non-blocking} IO. See chapter \todo{Chapter reference here}.
+
+\section{Cleaning Up}
+
+The first step in our example clean up code in listing
+\ref{lst:hello-world-client} is to print any OpenSSL errors that have been 
+recorded to \verb!stderr!. Errors can occur for many reasons. There are some
+examples of typical reasons in section \ref{sec:getstart-library-init}.
+
+Next we close down the SSL connection via a call to \verb!SSL_shutdown()!. The 
+purpose of this is to inform the server that we are planning on cleanly closing 
+down our connection. A special message known as a ``close\_notify'' alert is 
+sent. A return value of 0 from calling this function means that the client has 
+sent the ``close\_notify'' but it has not yet received a ``close\_notify'' back 
+from the server to acknowledge the closing down of the connection. To receive 
+that we call \verb!SSL_shutdown()! a \emph{second} time.
+
+We must also free up memory and resources allocated to our \verb!SSL! and
+\verb!SSL_CTX! objects as well as our underlying TCP connection.
+
+Finally, before application close down, we need to uninitialise libssl. In 
+real applications you may need to do more uninitialisation than shown in our 
+example code, dependant on what features of libssl/libcrypto you are using. For 
+example you may need to uninitialise configuration modules (see chapter
+\todo{ref here}); clean up engines (see chapter \todo{ref here}); or
+uninitialise compression methods if you have used them (see chapter \todo{ref 
+here}). 
+At a minimum though you need to:
+\begin{itemize}
+\item Call \texttt{CRYPTO\_cleanup\_all\_ex\_data()}. Many structures within
+OpenSSL have the ability to associate application specific data  (``ex\_data'')
+with them. libssl itself may use this capability and therefore  this needs to be
+cleaned up.
+\item Remove all ciphers and digests from the internal lookup tables using 
+\texttt{EVP\_cleanup()}.
+\item Call \texttt{ERR\_remove\_thread\_state()} to uninitialise the thread
+local error queue. Note: this function should be called for each thread in your
+application.
+\item Unload the human readable error strings by calling 
+\texttt{ERR\_free\_strings()}.
+\end{itemize}
+
+\section {Compiling the application}
+
+I will assume that you have already installed OpenSSL (see chapter \todo{ref 
+here} if not) and that you are using shared libraries. In order to compile our 
+application the compiler must be able to find the OpenSSL header files and the 
+linker must be able to find the shared libraries. Dependant on how you obtained 
+and installed your version of OpenSSL these may already be on the relevant 
+system paths. Otherwise you have to state them explicitly. For this section I 
+will assume that you are using Linux and that you have installed OpenSSL into
+\verb!\usr\local\ssl!. For other Operating Systems and locations you will have 
+to adjust the instructions accordingly. You can compile the application using:
+
+\begin{verbatim}
+$ gcc -o simpleclient simpleclient.c -I/usr/local/ssl/include \
+      -L/usr/local/ssl/lib -lcrypto -lssl
+\end{verbatim}
+
+\section {Running the application}
+
+To run the application first ensure that the test server is running as 
+described in section \ref{sec:start-test-server}. Let's see what happens when 
+we run it:
+
+\begin{verbatim}
+$ LD_LIBRARY_PATH=/usr/local/ssl/lib ./simpleclient
+139770294548112:error:1416F086:SSL routines:tls_process_server_c
+ertificate:certificate verify failed:statem/statem_clnt.c:1523:
+\end{verbatim}
+
+Firstly note that I have explicitly included \verb!\usr\local\ssl\lib! in the 
+\verb!LD_LIBRARY_PATH!. This ensures that the application can find the OpenSSL 
+shared libraries when it loads on my Linux system. This may not be necessary for
+you dependant on how you have set up and installed OpenSSL on your system, and 
+which Operating System you are using.
+
+Next, you will notice that we have encountered an error. So what went wrong? 
+Let's examine the various parts of the error message:
+\begin{itemize}
+\item \texttt{139770294548112}: This is a value that uniquely identifies the
+current thread. In our application we are only using one thread so this is not 
+particularly interesting to us.
+\item \texttt{error:1416F086}: This gives us a unique error code for the error
+that we have encountered. This can be useful if you have not loaded the human
+readable error strings by calling \texttt{SSL\_load\_error\_strings()} (see
+below).
+\item \texttt{SSL routines}: This tells us which component emitted the error. In
+this case ``\texttt{SSL routines}'' means that libssl emitted the error. Other
+possible values could come from one of the many components within libcrypto.
+\item \texttt{tls\_process\_server\_certificate}: This indicates the C function
+within the library where the error came from. This is mainly useful for OpenSSL
+developers or people familiar with the OpenSSL source code.
+\item \texttt{certificate verify failed}: A description of the reason for the
+error. This gives us the most important clue as to what went wrong.
+\item \texttt{statem/statem\_clnt.c:1523}: This tells us the C source code file 
+and line number within the library where the error came from. Again this is
+mainly  useful for OpenSSL developers or people familiar with the OpenSSL
+source code.
+\end{itemize}
+
+If you did not first load the human readable error strings when you initialised 
+the library by calling \verb!SSL_load_error_strings()! then partial error data
+can be obtained from the error code alone using the openssl command line tool:
+
+\begin{verbatim}
+$ openssl errstr 1416F086
+error:1416F086:SSL routines:tls_process_server_certificate:certi
+ficate verify failed
+\end{verbatim}
+
+Another source of information that may help you track down causes of errors is 
+to see if any log output or error messages have been emitted by the peer (i.e. 
+the server in this case). Let's take a look at our test server output:
+
+\begin{verbatim}
+$ openssl s_server -key server.key -cert server.pem -accept 1443
+Using default temp DH parameters
+ACCEPT
+ERROR
+140421989873296:error:14094418:SSL routines:ssl3_read_bytes:tlsv
+1 alert unknown ca:record/rec_layer_s3.c:1355:SSL alert number 48
+shutting down SSL
+CONNECTION CLOSED
+ACCEPT
+\end{verbatim}
+
+Here we can see another example of error output from OpenSSL. The interesting 
+error message here is ``\verb!tlsv1 alert unknown ca!''. Also note that, in 
+this error message, we have been provided with some additional data about the 
+error - ``\verb!SSL alert number 48!''. Not all errors have this additional 
+data, but some do.
+
+This error tells us that the server has received a fatal alert message from the 
+client, i.e. the client has encountered a fatal problem and is telling the 
+server that it is closing down. The type of alert gives us a clue as to what 
+kind of problem the client encountered which in this case is
+``\verb!unknown ca!''. This happens to correspond to alert number 48 in the TLS 
+specifications.
+
+So now we know what happened. The client did not recognise the CA for the 
+certificate that the server presented. The server's certificate was actually 
+self-signed, so it is its own CA. The fact that the client did not recognise it 
+is not surprising because we have not told the client about any trusted CAs. We 
+need to add that to our application.
+
+\section{Adding Trusted CAs}
+
+In order to tell our simple client about which CAs we trust we need to make a 
+slight amendement to our code.
+
+\lstinputlisting[float=tb,label=lst:trusted-cas,firstline=21,lastline=25,
+caption=Adding Trusted CAs to the client]
+{devel-tls/get-start/simpleclient2.c}
+
+In listing \ref{lst:trusted-cas} I have modified our existing application to add
+a new call to the \verb!SSL_CTX_load_verify_locations()! function (immediately
+after the existing call to \verb!SSL_CTX_set_verify()!). This is used to tell 
+OpenSSL where to find the set of trusted CA certificates. The first argument is
+simply the pointer to the \verb!SSL_CTX! that we already created. The second
+argument is the path to a file containing all of the CA certificates that we
+trust. In this case, because the server certificate is self signed, we must
+explicitly trust the server certificate itself and we do not need any other
+certificates to be trusted. Therefore the second argument becomes the path to 
+the server certificate. The final argument is the path to an indexed directory 
+containing certificates. Since we do not need this we just set it to 
+\verb!NULL!.
+
+Now, if we rerun our application, we should get a successful result:
+
+\begin{verbatim}
+$ LD_LIBRARY_PATH=/usr/local/ssl/lib ./simpleclient
+Success!
+\end{verbatim}

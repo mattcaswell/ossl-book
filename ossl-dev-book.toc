@@ -10,4 +10,12 @@
 \contentsline {section}{\numberline {3.1}Library Initialisation}{19}
 \contentsline {section}{\numberline {3.2}Creating an \texttt {SSL\_CTX}}{21}
 \contentsline {section}{\numberline {3.3}Connecting to a server}{23}
-\contentsline {part}{III\hspace {1em}Cryptography Application Programming}{25}
+\contentsline {subsection}{\numberline {3.3.1}Creating a self-signed certificate}{23}
+\contentsline {subsection}{\numberline {3.3.2}Starting the test server}{24}
+\contentsline {subsection}{\numberline {3.3.3}The client connection code}{24}
+\contentsline {section}{\numberline {3.4}Writing data}{26}
+\contentsline {section}{\numberline {3.5}Cleaning Up}{26}
+\contentsline {section}{\numberline {3.6}Compiling the application}{27}
+\contentsline {section}{\numberline {3.7}Running the application}{27}
+\contentsline {section}{\numberline {3.8}Adding Trusted CAs}{29}
+\contentsline {part}{III\hspace {1em}Cryptography Application Programming}{31}
