@@ -1,8 +1,8 @@
 \chapter{Getting started}
 This chapter will cover some of the most basic things that you need to 
 understand in order to write some very simple SSL/TLS code. Let's start off with
-a ``Hello World'' client. It's purpose is simply to open up an SSL/TLS
-connection to a remote server, send a simple message, and then close the
+a ``Hello World'' client. Its purpose is simply to open up an SSL/TLS
+connection to a remote server; send a simple message and then close the
 connection. Don't worry if you don't understand all of the individual steps yet,
 we will cover them in the rest of this chapter. See Listing
 \ref{lst:hello-world-client}.
@@ -19,7 +19,7 @@ Let's walk through this code sample step-by-step. Firstly we initialise
 former provides all of the underlying cryptography capabilities that are 
 required, as well as other ``helper'' functions. The latter adds onto that an
 understanding of how to communicate using the SSL/TLS protocol. Before you can 
-use libssl you must first initialise it. This initialisation step will take all 
+use libssl you must first initialise it. This initialisation will also take all 
 of the necessary steps to initialise the underlying libcrypto library. However 
 it only initialises ``enough'' for libssl use. Therefore if you want to 
 additionally use libcrypto capabilities directly then you will need to 
@@ -44,7 +44,7 @@ helpful for tracking down problems. For this reason calling
 \verb!SSL_load_error_strings()! is strongly recommended before using 
 libssl. The disadvantage is that loading this table of data does consume some 
 memory. This could be a problem in some environments (e.g. embedded systems), 
-and therefore in certain circumstances you may be appropriate to not load the
+and therefore in certain circumstances it may be appropriate to not load the
 error strings. If you choose to omit this step though, be prepared for later 
 difficulties in the event that errors occur.
 
@@ -71,15 +71,15 @@ simply a matter of calling the function \verb!SSL_CTX_new!. That function
 takes an \verb!SSL_METHOD! as a parameter. For clients there are five 
 primary \verb!SSL_METHOD!s that could be used:
 \begin{itemize}
-\item \verb!SSLv3_client_method()! Connections based on this method are 
+\item \verb!SSLv3_client_method()!: Connections based on this method are 
 \emph{only} capable of using SSLv3.0.
-\item \verb!TLSv1_client_method()! Creates connections that can 
+\item \verb!TLSv1_client_method()!: Creates connections that can 
 \emph{only} use TLS v1.0.
-\item \verb!TLSv1_1_client_method()! Creates connections that can 
+\item \verb!TLSv1_1_client_method()!: Creates connections that can 
 \emph{only} use TLS v1.1.
-\item \verb!TLSv1_2_client_method()! Creates connections that can 
+\item \verb!TLSv1_2_client_method()!: Creates connections that can 
 \emph{only} use TLS v1.2.
-\item \verb!TLS_client_method()! Creates connections that can negotiate 
+\item \verb!TLS_client_method()!: Creates connections that can negotiate 
 the highest available protocol version.
 \end{itemize}
 
@@ -142,8 +142,8 @@ present to us. This function actually provides us with the capability to define
 a very fine degree of control over that verification process. It takes three 
 arguments:
 \begin{enumerate}
-\item a pointer to the \texttt!SSL\_CTX! that we are working with;
-\item a verification mode that we wish to apply to the \texttt!SSL\_CTX!; and
+\item a pointer to the \texttt{SSL\_CTX} that we are working with;
+\item a verification mode that we wish to apply to the \texttt{SSL\_CTX}; and
 \item an optional callback function.
 \end{enumerate}
 
@@ -161,7 +161,7 @@ that to \verb!NULL!.
 Having set up our \verb!SSL_CTX! object, the next step is to connect to a
 server.  Before we can do that though we need to set up a server that we can
 use.  Fortunately openssl provides a test server for that purpose. However,
-before we  can use it, we need to create a certificate an private/public key
+before we  can use it, we need to create a certificate and private/public key
 pair.
 
 \subsection {Creating a self-signed certificate}
@@ -338,7 +338,7 @@ that we call \verb!SSL_shutdown()! a \emph{second} time.
 We must also free up memory and resources allocated to our \verb!SSL! and
 \verb!SSL_CTX! objects as well as our underlying TCP connection.
 
-Finally, before application close down, we need to uninitialise libssl. In 
+Finally, before the application closes down, we need to uninitialise libssl. In 
 real applications you may need to do more uninitialisation than shown in our 
 example code, dependant on what features of libssl/libcrypto you are using. For 
 example you may need to uninitialise configuration modules (see chapter
@@ -408,9 +408,9 @@ below).
 \item \texttt{SSL routines}: This tells us which component emitted the error. In
 this case ``\texttt{SSL routines}'' means that libssl emitted the error. Other
 possible values could come from one of the many components within libcrypto.
-\item \texttt{tls\_process\_server\_certificate}: This indicates the C function
-within the library where the error came from. This is mainly useful for OpenSSL
-developers or people familiar with the OpenSSL source code.
+\item \texttt{tls\_process\_server\_certificate}: This indicates the internal C
+function within the library where the error came from. This is mainly useful for
+OpenSSL developers or people familiar with the OpenSSL source code.
 \item \texttt{certificate verify failed}: A description of the reason for the
 error. This gives us the most important clue as to what went wrong.
 \item \texttt{statem/statem\_clnt.c:1523}: This tells us the C source code file 
