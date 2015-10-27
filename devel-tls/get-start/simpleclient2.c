@@ -22,6 +22,7 @@ int main(void)
    ctx = SSL_CTX_new(TLS_client_method());
    if (ctx == NULL) goto err;
    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+   SSL_CTX_load_verify_locations(ctx, "server.pem", NULL);
 
    /* Create a TCP connection to 127.0.01:1443 */
    sock = create_tcp_connection(servername, 1443);

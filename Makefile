@@ -4,7 +4,7 @@ OSSLDIR= /usr/local/ssl
 CC= gcc
 CFLAGS= -I$(OSSLDIR)/include -L$(OSSLDIR)/lib -g -lcrypto -lssl
 
-EXE= devel-tls/get-start/simpleclient
+EXE= devel-tls/get-start/simpleclient devel-tls/get-start/simpleclient2
 
 BOOKELEMS= ossl-dev-book.tex \
 	devel-tls/understand-tls/understand-tls.tex \
