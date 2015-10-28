@@ -4,7 +4,7 @@
 #include <netinet/in.h>
 #include <openssl/ssl.h>
 
-static int listen_for_connection(const char *servername, int port);
+static int listen_for_connection(const char *serveraddr, int port);
 
 int main(void)
 {
@@ -59,7 +59,7 @@ int main(void)
    return ret;
 }
 
-static int listen_for_connection(const char *servername, int port)
+static int listen_for_connection(const char *serveraddr, int port)
 {
    int servsock, clientsock = -1;
    struct sockaddr_in serv, client;
@@ -67,18 +67,19 @@ static int listen_for_connection(const char *servername, int port)
    int optval = 1;
 
    if((servsock = socket(AF_INET, SOCK_STREAM, 0)) < 0) return -1;
-   if (setsockopt(servsock, SOL_SOCKET, SO_REUSEADDR, (void *)&optval,
-                  sizeof(optval)) < 0)
+   if (setsockopt(servsock, SOL_SOCKET, SO_REUSEADDR,
+                  (void *)&optval, sizeof(optval)) < 0)
       goto err;
    memset(&serv, 0, sizeof(serv));
    serv.sin_family = AF_INET;
-   serv.sin_addr.s_addr = inet_addr(servername);
+   serv.sin_addr.s_addr = inet_addr(serveraddr);
    serv.sin_port = htons(port);
    if (bind(servsock, (struct sockaddr *)&serv, sizeof(serv)) < 0
         || listen(servsock, 1) < 0)
       goto err;
 
-   clientsock = accept(servsock, (struct sockaddr *)&client, &clientlen);
+   clientsock = accept(servsock, (struct sockaddr *)&client,
+                       &clientlen);
 err:
    close(servsock);
    return clientsock;

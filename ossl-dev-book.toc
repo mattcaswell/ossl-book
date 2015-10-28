@@ -18,4 +18,8 @@
 \contentsline {section}{\numberline {3.6}Compiling the application}{20}
 \contentsline {section}{\numberline {3.7}Running the application}{20}
 \contentsline {section}{\numberline {3.8}Adding Trusted CAs}{22}
-\contentsline {part}{III\hspace {1em}Cryptography Application Programming}{23}
+\contentsline {section}{\numberline {3.9}A simple server}{22}
+\contentsline {subsection}{\numberline {3.9.1}Setting up the \texttt {SSL\_CTX}}{24}
+\contentsline {subsection}{\numberline {3.9.2}Listening for an incoming connection}{25}
+\contentsline {subsection}{\numberline {3.9.3}Completing the connection}{25}
+\contentsline {part}{III\hspace {1em}Cryptography Application Programming}{27}

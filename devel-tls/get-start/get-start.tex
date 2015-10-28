@@ -492,3 +492,126 @@ Now, if we rerun our application, we should get a successful result:
 $ LD_LIBRARY_PATH=/usr/local/ssl/lib ./simpleclient
 Success!
 \end{verbatim}
+
+\section{A simple server}
+
+Writing a simple server implementation is very similar to a client, but there 
+are also some important differences. See listing \ref{lst:simpleserver}.
+
+\lstinputlisting[float=p,label=lst:simpleserver,lastline=60,
+caption=A simple server]
+{devel-tls/get-start/simpleserver.c}
+
+\subsection{Setting up the \texttt{SSL\_CTX}}
+
+Compared to our simple client you will notice that we no longer call the 
+functions \verb!SSL_CTX_set_verify()! or \verb!SSL_CTX_load_verify_locations()!.
+This may
+be necessary for some server applications - but not for this one. Specifically 
+if you want to use client authentication\footnote{The SSL/TLS protocols enable 
+the ability for a server to request a certificate from the \emph{client}. This 
+is known as \emph{client authentication}. In this case the server will have to 
+be set up to verify the provided certificate.} then you will need to use these 
+functions.
+
+We have added a call to \verb!SSL_CTX_use_certificate_file()!. This identifies 
+the file containing the certificate that the server will present to clients. In 
+most real applications that do not use self-signed certificates you will 
+additionally need to make a call to 
+\verb!SSL_CTX_use_certificate_chain_file()!. Certificates provided by CAs do 
+not typically get signed directly by the root CA certificate. Instead there may 
+be one or more \emph{intermediate} CA certificates, e.g. in the simplest case 
+the root CA signs the certificate for an intermediate CA and the intermediate 
+CA signs the server certificate. A certificate chain file must contain all of 
+the certificates that exist in the chain between the root CA certificate and the
+server certificate. It should not include the root CA certificate itself or the
+server certificate, i.e. \emph{just} the intermediate certificates.
+
+The \verb!SSL_CTX_use_certificate_file()! function takes three arguments:
+
+\begin{itemize}
+\item A pointer to the \texttt{SSL\_CTX} object that we are using
+\item The filename of the file containing the server certificate
+\item The format of the server certificate file
+\end{itemize}
+
+Normally you will use \verb!SSL_FILETYPE_PEM! for the format. Here is an 
+example of a typical certificate in this format:
+
+\begin{verbatim}
+-----BEGIN CERTIFICATE-----
+MIIDBjCCAe4CCQC+Cd3tCOGkQzANBgkqhkiG9w0BAQsFADBFMQswCQYDVQQGEwJV
+SzETMBEGA1UECAwKRGVyYnlzaGlyZTENMAsGA1UECgwEVGVzdDESMBAGA1UEAwwJ
+MTI3LjAuMC4xMB4XDTE1MTAyNzE0NDUwN1oXDTE2MTAyNjE0NDUwN1owRTELMAkG
+A1UEBhMCVUsxEzARBgNVBAgMCkRlcmJ5c2hpcmUxDTALBgNVBAoMBFRlc3QxEjAQ
+BgNVBAMMCTEyNy4wLjAuMTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEB
+AOBNV6Diz3/FPfDM6+k6EBri7cb9GeEJn/9WX8bmpzu2Zaneid/g6CG7lz4/I6gO
+V31aNHVSK8F5GZ1Mf7YDtTlT+rij6ad78EhYdCks2fj4lRIHeBXixl35KUAtsEfy
+tFKeUKM/1AIB1iD/CydXxAMWw8EzxUUkyHkSQiO/XozkZzp08L6QtfKIiSVm5+Jl
+JqVl91l1i7KBSTDdhUiXBCxYa+1cGHtC1a+F1Ge2fCFoQ8WV88bsTg7RmDfiZEsa
+tk2Ew6j9RGFp++7V9zpT9cBAO2kIS7+qbSiJH89sC/9kXk1GkgG+eyyWwr2cli+E
+mrhUlJrDrXuTTZ/6Aq040hUCAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAfq4tn3i8
++pgJdfCibrO9y48Z84J4oOW3rigAM6eaTtnLiG6lh7sou3ANsaK/gYIFwvWw5ixs
+ajY6IGnBIIwlwyac+hS3jnyL9vb4AtSCr7quYAcmrA3vUrgyVgvQQ4Yq7JjiayTZ
+6DMhqFEfDrZpvFMy4LwdaYiVn7SZQG62XFkKPlwQ1gcYc38Gbo2BD1nBFBmDtr4d
+TrywHvePj7gzk6u4cAP8pAKngMb4S+tvlrqTJcIxpBdXMkqU5BvJMsIK+OVkKAD0
+VVSHnAYwk6I5P85W5JW0K2nZacLAWQknZAOaQWrIq1gx9xANZDYGc051/YpXnDY2
+OrxRtjKCuljbsg==
+-----END CERTIFICATE-----
+\end{verbatim}
+
+This is a base64\footnote{Base64 encoding converts binary data into printable 
+text strings.} encoded form of a binary certificate format. It is also 
+possible to use a certificate directly in binary format using 
+\verb!SSL_FILETYPE_ASN1!\footnote{Abstract Syntax Notation One (ASN.1) is a 
+notation for describing the structure of data that has been standardised by 
+ISO, IEC and ITU-T.}.
+
+In addition to providing the server certificate we also need to provide the 
+server private key. This works in much the same way as for the certificate 
+except using the \verb!SSL_CTX_use_PrivateKey_file()! function. The arguments 
+are the same as for \verb!SSL_CTX_use_certificate_file()!.
+
+Finally we call \verb!SSL_CTX_check_private_key()!. This verifies the 
+consistency of the provided certificate and private key, i.e. it checks that 
+the private key matches the public key in the certificate.
+
+\subsection{Listening for an incoming connection}
+
+I have used a helper function \verb!listen_for_connection()! in listing 
+\ref{lst:simpleserver}. The purpose of this is to listen for an incoming TCP 
+connection on the provided IP address and port number. When an incoming 
+connection arrives the function returns with the file descriptor for the new 
+connection. This function does not use any OpenSSL specific code. It is only 
+capable of listening for one connection. In a real application this would 
+usually be incorporated into a loop of some form such that the server can 
+handle connections from multiple clients. The code is provided in listing 
+\ref{lst:listen-for-conn}.
+
+\lstinputlisting[float=tb,label=lst:listen-for-conn,firstline=62,
+caption=The \texttt{listen\_for\_connection()} function]
+{devel-tls/get-start/simpleserver.c}
+
+\subsection{Completing the connection}
+
+Once we have the TCP connection established, we still need to complete the 
+SSL/TLS connection. This is achieved by calling \verb!SSL_accept()!. As for the 
+client this is not entirely necessary since as soon as you call \verb!SSL_read! 
+or \verb!SSL_write! on the \verb!SSL! object it will immediately call 
+\verb!SSL_accept()! for you, if you have not already done so. However calling 
+it directly provides you with more control over when the SSL/TLS handshake 
+occurs.
+
+In this example the server is not writing any data for the client, but is 
+instead expecting a single string to be sent, which it reads using 
+\verb!SSL_read!. It then simply prints the received message on the screen and 
+then closes down in much the same way as for the client.
+
+This is the output we get from our server if we use it together with the client 
+that we developed at the beginning of this chapter:
+
+\begin{verbatim}
+$ LD_LIBRARY_PATH=/usr/local/ssl/lib ./simpleserver 
+Hello World!
+\end{verbatim}
+
