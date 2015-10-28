@@ -71,11 +71,13 @@ mathematically related to the private key, although it is not possible to
 derive the private key from it. The public key is published in the digital 
 certificate and it is safe for this to be available to everyone.
 
-Having obtained a private/public key pair a server operator will apply to a 
-third party organisation, known as a \emph{Certificate Authority} (CA) for a
-certificate.\footnote{There are many CAs available. A simple search in your
-search engine of choice should turn up lots of links. Most charge a fee for
-issuing a certificate.} The CA will, at a minimum, verify that the server 
+Having obtained a private/public key pair a server operator must obtain their
+certificate from a \emph{Certificate Authority} (CA)\footnote{CAs can be
+privately run and purely internal to an organisation; or they could be public.
+Which type is most appropriate will depend on what the certificte will be used
+for. There are many public CAs available. A simple search in your search engine
+of choice should turn up lots of links. Most charge a fee for
+issuing a certificate.}. The CA will, at a minimum, verify that the server 
 operator is in control of the domain name to be included in the certificate. 
 Dependant on the type of certificate ordered, other checks may also be 
 performed to verify the identity of the server operator. Finally the CA will 
