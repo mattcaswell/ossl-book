@@ -76,7 +76,7 @@ certificate from a \emph{Certificate Authority} (CA)\footnote{CAs can be
 privately run and purely internal to an organisation; or they could be public.
 Which type is most appropriate will depend on what the certificte will be used
 for. There are many public CAs available. A simple search in your search engine
-of choice should turn up lots of links. Most charge a fee for
+of choice should turn up lots of links. Many, but not all, charge a fee for
 issuing a certificate.}. The CA will, at a minimum, verify that the server 
 operator is in control of the domain name to be included in the certificate. 
 Dependant on the type of certificate ordered, other checks may also be 
@@ -85,7 +85,7 @@ issue the certificate which itself will be digitally signed by the CA.
 
 Both the digital certificate, and the associated private key are installed on 
 the SSL/TLS server. When a client accesses the server, the server will send 
-back to the client its certificate. In order for authentication to be 
+its certificate back to the client. In order for authentication to be
 successful the client must verify two things:
 \begin{enumerate}
 \item The certificate provided by the server is valid and issued by a CA that 
@@ -129,16 +129,16 @@ between both ends of the communication and must be \emph{private} to prevent an
 eavesdropper from being able to decrypt messages. Key exchange algorithms solve 
 the problem of how two parties will agree on a key without enabling an 
 eavedropper to work out what it is. Examples of algorithms that are used for 
-this purpose include RSA, DH and ECDH.\footnote{You will also very frequently 
-come across the so-called ``ephemeral'' variants of DH and ECDH known as DHE 
-and ECHDE respectively.}
+this purpose include RSA, DH and ECDH.\footnote{You will also very
+frequently come across the so-called ``ephemeral'' variants of DH and ECDH
+known as DHE and ECHDE respectively.}
 \item Encryption. Having established a shared encryption key, the two 
 communicating parties can start to protect their communications from 
 eavesdroppers by encrypting the data that they exchange. Examples of common 
-encryption algorithms include AES, CAMELLIA and 3DES.
+encryption algorithms include AES, CAMELLIA and ChaCha20.
 \item Integrity. The algorithm used to protect communications from being 
 tampered with by an attacker. Often the algorithm used here will be one known 
-as HMAC combined with a message digest algorithm such as SHA1 or SHA256. A 
+as HMAC combined with a message digest algorithm such as SHA256 or SHA512. A
 message digest is simply a secure ``hash'' function. They take arbitrary 
 length input data and output a fixed length ``hash'' value that exhibits 
 certain security properties (including that it is not possible to derive the 
@@ -161,23 +161,23 @@ OpenSSL differently).
 
 \begin{lstlisting}[float=tb,label=lst:ciphers-extract,caption=An
 extract from \lstinline!openssl ciphers -v! output]
-ECDHE-ECDSA-AES256-CCM8 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=AESCCM8(256) Mac=AEAD
-ECDHE-ECDSA-AES256-CCM  TLSv1.2 Kx=ECDH     Au=ECDSA Enc=AESCCM(256) Mac=AEAD
-ECDHE-RSA-AES256-GCM-SHA384 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AESGCM(256) Mac=AEAD
 ECDHE-ECDSA-AES256-GCM-SHA384 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=AESGCM(256) Mac=AEAD
-ECDHE-RSA-AES256-SHA384 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AES(256)  Mac=SHA384
+ECDHE-RSA-AES256-GCM-SHA384 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AESGCM(256) Mac=AEAD
+DHE-RSA-AES256-GCM-SHA384 TLSv1.2 Kx=DH       Au=RSA  Enc=AESGCM(256) Mac=AEAD
+ECDHE-ECDSA-CHACHA20-POLY1305 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=CHACHA20/POLY1305(256) Mac=AEAD
+ECDHE-RSA-CHACHA20-POLY1305 TLSv1.2 Kx=ECDH     Au=RSA  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+DHE-RSA-CHACHA20-POLY1305 TLSv1.2 Kx=DH       Au=RSA  Enc=CHACHA20/POLY1305(256) Mac=AEAD
+ECDHE-ECDSA-AES128-GCM-SHA256 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=AESGCM(128) Mac=AEAD
+ECDHE-RSA-AES128-GCM-SHA256 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AESGCM(128) Mac=AEAD
+DHE-RSA-AES128-GCM-SHA256 TLSv1.2 Kx=DH       Au=RSA  Enc=AESGCM(128) Mac=AEAD
 ECDHE-ECDSA-AES256-SHA384 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=AES(256)  Mac=SHA384
-ECDHE-RSA-AES256-SHA    SSLv3 Kx=ECDH     Au=RSA  Enc=AES(256)  Mac=SHA1
-ECDHE-ECDSA-AES256-SHA  SSLv3 Kx=ECDH     Au=ECDSA Enc=AES(256)  Mac=SHA1
-DHE-PSK-AES256-CCM8     TLSv1.2 Kx=DHEPSK   Au=PSK  Enc=AESCCM8(256) Mac=AEAD
-DHE-PSK-AES256-CCM      TLSv1.2 Kx=DHEPSK   Au=PSK  Enc=AESCCM(256) Mac=AEAD
-DHE-RSA-AES256-CCM8     TLSv1.2 Kx=DH       Au=RSA  Enc=AESCCM8(256) Mac=AEAD
-DHE-RSA-AES256-CCM      TLSv1.2 Kx=DH       Au=RSA  Enc=AESCCM(256) Mac=AEAD
-ECDHE-PSK-AES256-CBC-SHA384 SSLv3 Kx=ECDHEPSK Au=PSK  Enc=AES(256)  Mac=SHA384
-ECDHE-PSK-AES256-CBC-SHA SSLv3 Kx=ECDHEPSK Au=PSK  Enc=AES(256)  Mac=SHA1
-SRP-DSS-AES-256-CBC-SHA SSLv3 Kx=SRP      Au=DSS  Enc=AES(256)  Mac=SHA1
-SRP-RSA-AES-256-CBC-SHA SSLv3 Kx=SRP      Au=RSA  Enc=AES(256)  Mac=SHA1
-SRP-AES-256-CBC-SHA     SSLv3 Kx=SRP      Au=SRP  Enc=AES(256)  Mac=SHA1
+ECDHE-RSA-AES256-SHA384 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AES(256)  Mac=SHA384
+DHE-RSA-AES256-SHA256   TLSv1.2 Kx=DH       Au=RSA  Enc=AES(256)  Mac=SHA256
+ECDHE-ECDSA-AES128-SHA256 TLSv1.2 Kx=ECDH     Au=ECDSA Enc=AES(128)  Mac=SHA256
+ECDHE-RSA-AES128-SHA256 TLSv1.2 Kx=ECDH     Au=RSA  Enc=AES(128)  Mac=SHA256
+DHE-RSA-AES128-SHA256   TLSv1.2 Kx=DH       Au=RSA  Enc=AES(128)  Mac=SHA256
+ECDHE-ECDSA-AES256-SHA  TLSv1 Kx=ECDH     Au=ECDSA Enc=AES(256)  Mac=SHA1
+ECDHE-RSA-AES256-SHA    TLSv1 Kx=ECDH     Au=RSA  Enc=AES(256)  Mac=SHA1
 \end{lstlisting}
 
 An extract of the output from \lstinline!openssl ciphers -v! is given in 
