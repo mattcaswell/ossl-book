@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <openssl/ssl.h>
+#include <openssl/err.h>
 
 static int create_tcp_connection(const char *servername, int port);
 

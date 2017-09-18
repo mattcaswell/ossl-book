@@ -2,7 +2,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <unistd.h>
 
 static int listen_for_connection(const char *serveraddr, int port);
 
