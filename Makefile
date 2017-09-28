@@ -10,7 +10,8 @@ EXE= devel-tls/get-start/simpleclient devel-tls/get-start/simpleclient2 \
 BOOKELEMS= ossl-dev-book.tex \
 	introduction/getting/getting.tex \
 	devel-tls/understand-tls/understand-tls.tex \
-	devel-tls/get-start/get-start.tex
+	devel-tls/get-start/get-start.tex \
+	devel-tls/ciphersuites/ciphersuites.tex
 
 all: ossl-dev-book.pdf 
 
