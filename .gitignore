@@ -1,6 +1,11 @@
-#PDF and log files
+#PDF, aux and log files
 *.pdf
 *.log
+*.aux
+
+#Top level auto-generated files
+ossl-dev-book.out
+ossl-dev-book.toc
 
 #Executables
 /devel-tls/get-start/simpleclient
