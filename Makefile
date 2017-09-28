@@ -8,6 +8,7 @@ EXE= devel-tls/get-start/simpleclient devel-tls/get-start/simpleclient2 \
 	devel-tls/get-start/simpleserver
 
 BOOKELEMS= ossl-dev-book.tex \
+	introduction/getting/getting.tex \
 	devel-tls/understand-tls/understand-tls.tex \
 	devel-tls/get-start/get-start.tex
 

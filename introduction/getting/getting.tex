@@ -1,0 +1,117 @@
+\chapter{Getting OpenSSL}
+
+There are multiple ways to get hold of OpenSSL. This chapter will cover
+how to compile and install OpenSSL from source, as well as discuss various
+options for obtaining OpenSSL in pre-built binary form.
+
+\section{Understanding OpenSSL version numbers}
+
+The OpenSSL project (\url{https://www.openssl.org}) develops and
+maintains the OpenSSL source code. The project stores all of the source
+code in a source code control system known as git. Periodically the
+project will generate a new \emph{release}. This is a snapshot of the source
+code at a given point in time that is collected together into a single archive
+file and made available for download.
+
+At any one time there may be multiple versions of OpenSSL that are receiving
+support by the project team. Support in this context means that bugs are
+fixed and security issues are investigated, reported and fixed as appropriate.
+
+For example OpenSSL 1.1.0 and OpenSSL 1.0.2 are two versions of OpenSSL. Each
+version of OpenSSL may have multiple releases associated with it. These are
+identified by a letter after the version number. The very first release for
+a version has no letter. For example the first release for OpenSSL 1.1.0 has
+the version number 1.1.0, the second one is 1.1.0a, the third one is 1.1.0b,
+and so on. The letter releases contain bug and security fixes for the given
+OpenSSL version (but never new features). To ensure that you always have the
+latest fixes you should always try to use the latest letter release that is
+available for the OpenSSL version that you are using. Letter releases for a
+version are always fully backward compatible.
+
+Versions of OpenSSL which have the same first two numbers are backwards source
+and binary compatible with each other\footnote{This only applies if both versions
+have been compiled with the same options}. For example 1.0.2 is backwards
+source and binary compatible with 1.0.1 and 1.0.0. This means upgrading from
+one of these versions to a later one should simply be a matter of upgrading the
+library itself. No recompilation of application binaries using OpenSSL should be
+necessary. If recompilation of applications is done then they should continue to
+work as before. New features will typically have been added if the third number
+has been increased.
+
+Versions of OpenSSL which change the middle number are not backwards source or
+binary compatible with each other. For example 1.1.0 is not fully backwards
+source or binary compatible with 1.0.2. The changes required to upgrade an
+application that works with 1.0.2 for 1.1.0 are relatively small and straight
+forward though.
+
+The OpenSSL project has not defined what it means if the first number changes,
+but we should assume that this would signal some very significant change. The
+project has no current plans for a version that changes this number.
+
+OpenSSL versions are supported for a given period of time. Some OpenSSL versions
+are designated as Long Term Support (LTS) versions. Non-LTS versions are supported
+for 2 years. LTS versions are supported for 5 years. During the final year of
+any support period the version only receives security fixes (but not bug fixes).
+OpenSSL 1.0.2 is an LTS release.
+
+Note that it is usually possible to have multiple versions of OpenSSL installed on
+the same system at the same time.
+
+New applications that are being developed to use OpenSSL should typically use the
+latest version of OpenSSL available. This guide describes the use of OpenSSL 1.1.x
+(where "x" is any number). It does not describe how to use OpenSSL 1.0.2 (or earlier)
+which has a number of differences.
+
+In addition to the main OpenSSL versions the OpenSSL project also distributes the
+OpenSSL FIPS module. This is a US government certified cryptography module that
+works in conjunction with the main OpenSSL library. Most users \emph{should not} use
+the FIPS module. If you \emph{must} use it then you should carefully read the notes
+about FIPS on the OpenSSL project website,
+\url{https://www.openssl.org/docs/fipsnotes.html}.
+
+\section{Prerequisites for compiling OpenSSL from source}
+
+In order to compile OpenSSL you will need to ensure that you have a suitable set of
+tools that are required. All compilation typically takes place from the command for
+your platform.
+
+Firstly you will need a C compiler. Almost any modern C compiler should be suitable for
+this. Common ones that are used include gcc and clang. On Linux most distributions will
+provide a suitable package to install this through your package manager. XXXX give
+details for RedHat/Debian??? XXXX
+
+On the Windows platform there are two primary options for a C compiler. Either you can
+use Microsoft's C compiler (as distributed with VisualStudio) or you can use the MinGW
+gcc compiler. If you are going to use the compiler provided with VisualStudio then you
+will still need to compile from the command line. VisualStudio provides the ability to
+start a Developer Command Prompt, which sets up various environment variables to
+correctly use the command line build tools. Start the version of the Developer
+Command Prompt that matches the architecture for the platform you are taregetting. For
+example if you want to build 32-bit OpenSSL then ensure that you start the 32-bit
+Developer Command Prompt. Similarly if you want 64-bit OpenSSL then start the 64-bit
+version.
+
+If you plan to use the MinGW compiler then you should install MSYS2. This includes
+packages for the the MinGW compiler in it \url{www.msys2.org}. Make sure you read the
+MSYS2 introduction page at \url{https://github.com/msys2/msys2/wiki/MSYS2-introduction}
+and follow the instructions for setting up MSYS2 with access to the correct compilers.
+After installing MSYS2 with the correct compilers then, if you want to build 32-bit
+OpenSSL, start the MinGW-w64 32-bit Shell or, to build 64-bit OpenSSL, start the
+MinGW-w64 64-bit Shell.
+
+
+
+\section{Compiling and Installing from source}
+
+You can obtain the currently supported versions of OpenSSL from the download page at
+\url{https://www.openssl.org/source}. Older versions are also available via a link
+from that page.
+
+Click on the link for the version you want to install in order to download an archive
+file containing all of the relevant source code. The download archive is in ".tar.gz"
+format. Many common archive/compression tools are able to read this format. Select a
+suitable tool for your platform and uncompress and extract the files in the archive
+into a suitable directory. For example on Linux you might type the following:
+
+$ tar xvf openssl-1.1.0f.tar.gz
+
