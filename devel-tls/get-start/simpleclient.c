@@ -1,7 +1,9 @@
+#include <unistd.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
@@ -15,11 +17,6 @@ int main(void)
    X509_VERIFY_PARAM *param;
    const char *servername = "127.0.0.1", *msg = "Hello World!";
 
-   /* Initialise libssl */
-   SSL_load_error_strings();
-   SSL_library_init();
-
-   /* Prior to 1.1.0 use SSLv23_client_method() */
    ctx = SSL_CTX_new(TLS_client_method());
    if (ctx == NULL) goto err;
    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
@@ -53,11 +50,7 @@ int main(void)
    SSL_free(ssl);
    if (sock != -1) close(sock);
    SSL_CTX_free(ctx);
-   /* Unitialise libssl */
-   CRYPTO_cleanup_all_ex_data();
-   EVP_cleanup();
-   ERR_remove_thread_state(NULL);
-   ERR_free_strings();
+
    return ret;
 }
 

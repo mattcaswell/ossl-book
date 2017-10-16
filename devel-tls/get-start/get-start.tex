@@ -7,59 +7,9 @@ connection. Don't worry if you don't understand all of the individual steps yet,
 we will cover them in the rest of this chapter. See Listing
 \ref{lst:hello-world-client}.
 
-\lstinputlisting[float=p,label=lst:hello-world-client,lastline=61,
+\lstinputlisting[float=p,label=lst:hello-world-client,lastline=55,
 caption=A simple ``Hello World'' client]
 {devel-tls/get-start/simpleclient.c}
-
-\section{Library Initialisation}
-\label{sec:getstart-library-init}
-
-Let's walk through this code sample step-by-step. Firstly we initialise 
-``libssl''. OpenSSL provides two libraries ``libcrypto'' and ``libssl''. The 
-former provides all of the underlying cryptography capabilities that are 
-required, as well as other ``helper'' functions. The latter adds onto that an
-understanding of how to communicate using the SSL/TLS protocol. Before you can 
-use libssl you must first initialise it. This initialisation will also take all 
-of the necessary steps to initialise the underlying libcrypto library. However 
-it only initialises ``enough'' for libssl use. Therefore if you want to 
-additionally use libcrypto capabilities directly then you will need to 
-explicitly initialise that too.
-
-There are two steps to libssl initialisation. The first of these is to call 
-\verb!SSL_load_error_strings()!. There are numerous errors that may occur 
-during libssl usage. Some examples of errors that could occur are:
-\begin{itemize}
-\item A remote peer sends an illegal message.
-\item It is not possible to find a ciphersuite that is acceptable to both 
-parties.
-\item It is not possible to find a common protocol version. 
-\item The remote peer unexpectedly closed the connection.
-\item Some internal error (bug) was hit.
-\end{itemize}
-
-OpenSSL maintains an internal table of all the errors that could occur along 
-with their human readable description, as well as the internal function and 
-line number within the library that issued the error. This information is very 
-helpful for tracking down problems. For this reason calling 
-\verb!SSL_load_error_strings()! is strongly recommended before using 
-libssl. The disadvantage is that loading this table of data does consume some 
-memory. This could be a problem in some environments (e.g. embedded systems), 
-and therefore in certain circumstances it may be appropriate to not load the
-error strings. If you choose to omit this step though, be prepared for later 
-difficulties in the event that errors occur.
-
-The second step in initialisation is to call \verb!SSL_library_init()!. 
-This performs a number of initialisation steps including preparing the required 
-ciphers and digests for use. Calling this function is mandatory prior to 
-calling other libssl functions. You may encounter references to two other 
-functions in some sources:
-\begin{itemize}
-\item\verb!OpenSSL_add_ssl_algorithms()!; and 
-\item\verb!SSLeay_add_ssl_algorithms()!.
-\end{itemize}
-These two functions are actually  synonyms for \verb!SSL_library_init()! but are
-present for backwards compatibility reasons only, i.e. don't use them in new
-code.
 
 \section{Creating an \texttt{SSL\_CTX}}
 
@@ -89,45 +39,12 @@ should use the new name. Don't be confused by the old name -
 \verb!SSLv23_client_method()! is capable of negotiating \emph{all} 
 supported protocol versions.
 
-Normally you only ever need to use \verb!TLS_client_method()!. Don't use 
-the other protocol specific methods unless you really need to. If you want to 
-be able to restrict which protocol versions can be negotiated (for example to 
-prevent SSLv3 from being used) then there are a set of options to allow this 
-(see table \ref{tab:protocol-opts}).
+You should only ever need to use \verb!TLS_client_method()!. Don't use
+the other protocol specific methods - they are provided for backwards
+compatibility reasons only. If you want to  be able to restrict which protocol
+versions can be negotiated (for example to prevent SSLv3 from being used) then
+there are a set of options to allow this  (see table \ref{tab:protocol-opts}).
 
-\begin{table}[tb]
-\centering
-\begin{tabular}{|l|l|}
-\hline
-\rowcolor{LightGray}
-Option Name & Option Description \\
-\hline
-\verb!SSL_OP_NO_SSLv3! & Disable SSL v3 support \\
-\hline
-\verb!SSL_OP_NO_TLSv1! & Disable TLS v1.0 support \\
-\hline
-\verb!SSL_OP_NO_TLSv1_1! & Disable TLS v1.1 support \\
-\hline
-\verb!SSL_OP_NO_TLSv1_2! & Disable TLS v1.2 support \\
-\hline
-\end{tabular}
-\caption{Protocol negotiation options}
-\label{tab:protocol-opts}
-\end{table}
-
-To apply these options you use the \verb!SSL_CTX_set_options()! command. You 
-can also set them on individual \verb!SSL! objects if you wish to have that 
-level of control using \verb!SSL_set_options()!. You must do so \emph{before} 
-any connection is established in order for them to have an effect. You can 
-``OR'' multiple options together if you want to disable multiple options in one 
-go. For example the following code disables both SSL v3 and TLS v1.0:
-\begin{lstlisting}
-SSL_CTX_set_options(SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1);
-\end{lstlisting}
-
-You should only have a single contiguous range of enabled protocol versions, 
-e.g. do not disable SSL v3 and TLS v1.1, whilst keeping TLS v1.0 and TLS v1.2 
-enabled.
 
 In our simple client code in listing \ref{lst:hello-world-client} we are not
 disabling any protocol versions so we simply call \verb!SSL_CTX_new()! with
