@@ -112,7 +112,7 @@ together and enabling the client and server to negotiate between them which
 combination of algorithms will be used to protect messages that are exchanged. 
 A group of algorithms combined in this way is known as a \emph{ciphersuite}. 
 There are many different ciphersuites that are available\footnote{At the time 
-of writing OpenSSL 1.1.0 supports 200 different ciphersuites}. Each 
+of writing OpenSSL 1.1.0 supports 168 different ciphersuites}. Each
 ciphersuite identifies a set of algorithms that it will use to satsify the 
 following cryptographic primitives:
 \begin{itemize}
@@ -150,9 +150,9 @@ Examples of modes that provide integrity include GCM and CCM.
 
 To look at some example ciphersuites you can use the \lstinline!openssl ciphers!
 command line tool:
-\begin{lstlisting}[caption=Showing the openssl DEFAULT ciphersuites]
-> openssl ciphers -v
-\end{lstlisting}
+\begin{verbatim}
+$ openssl ciphers -v
+\end{verbatim}
 
 The \lstinline!-v! argument here instructs OpenSSL to display verbose output.
 Without any other arguments this will list information about the DEFAULT
