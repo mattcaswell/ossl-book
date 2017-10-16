@@ -16,10 +16,6 @@ int main(void)
    int sock = -1, ret = 1, len;
    char msg[80];
 
-   /* Initialise libssl */
-   SSL_load_error_strings();
-   SSL_library_init();
-
    /* Prior to 1.1.0 use SSLv23_server_method() */
    ctx = SSL_CTX_new(TLS_server_method());
    if (ctx == NULL) goto err;
@@ -54,11 +50,6 @@ int main(void)
    SSL_free(ssl);
    if (sock != -1) close(sock);
    SSL_CTX_free(ctx);
-   /* Unitialise libssl */
-   CRYPTO_cleanup_all_ex_data();
-   EVP_cleanup();
-   ERR_remove_thread_state(NULL);
-   ERR_free_strings();
    return ret;
 }
 

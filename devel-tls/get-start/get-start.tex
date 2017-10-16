@@ -1,4 +1,6 @@
 \chapter{Getting started}
+\label{chp:getting-started}
+
 This chapter will cover some of the most basic things that you need to 
 understand in order to write some very simple SSL/TLS code. Let's start off with
 a ``Hello World'' client. Its purpose is simply to open up an SSL/TLS
@@ -146,7 +148,7 @@ An optional company name []:
 \end{verbatim}
 
 The final step is to generate the certificate based on the information 
-contained with the CSR file, and sign it with the private key that we generated 
+contained within the CSR file, and sign it with the private key that we generated
 in the first step.
 
 \begin{verbatim}
@@ -178,7 +180,7 @@ arguments: the IP address of the server to connect to; and the port number. This
 helper function is shown in listing \ref{lst:create-tcp-connection}. There is 
 nothing OpenSSL specific about how this works.
 
-\lstinputlisting[float=tb,label=lst:create-tcp-connection,firstline=63,
+\lstinputlisting[float=tb,label=lst:create-tcp-connection,firstline=57,
 caption=The \texttt{create\_tcp\_connection()} function]
 {devel-tls/get-start/simpleclient.c}
 
@@ -255,43 +257,22 @@ that we call \verb!SSL_shutdown()! a \emph{second} time.
 We must also free up memory and resources allocated to our \verb!SSL! and
 \verb!SSL_CTX! objects as well as our underlying TCP connection.
 
-Finally, before the application closes down, we need to uninitialise libssl. In 
-real applications you may need to do more uninitialisation than shown in our 
-example code, dependant on what features of libssl/libcrypto you are using. For 
-example you may need to uninitialise configuration modules (see chapter
-\todo{ref here}); clean up engines (see chapter \todo{ref here}); or
-uninitialise compression methods if you have used them (see chapter \todo{ref 
-here}). 
-At a minimum though you need to:
-\begin{itemize}
-\item Call \texttt{CRYPTO\_cleanup\_all\_ex\_data()}. Many structures within
-OpenSSL have the ability to associate application specific data  (``ex\_data'')
-with them. libssl itself may use this capability and therefore  this needs to be
-cleaned up.
-\item Remove all ciphers and digests from the internal lookup tables using 
-\texttt{EVP\_cleanup()}.
-\item Call \texttt{ERR\_remove\_thread\_state()} to uninitialise the thread
-local error queue. Note: this function should be called for each thread in your
-application.
-\item Unload the human readable error strings by calling 
-\texttt{ERR\_free\_strings()}.
-\end{itemize}
-
 \section {Compiling the application}
 
-I will assume that you have already installed OpenSSL (see chapter \todo{ref 
-here} if not) and that you are using shared libraries. In order to compile our 
-application the compiler must be able to find the OpenSSL header files and the 
-linker must be able to find the shared libraries. Dependant on how you obtained 
-and installed your version of OpenSSL these may already be on the relevant 
-system paths. Otherwise you have to state them explicitly. For this section I 
-will assume that you are using Linux and that you have installed OpenSSL into
-\verb!\usr\local\ssl!. For other Operating Systems and locations you will have 
-to adjust the instructions accordingly. You can compile the application using:
+I will assume that you have already installed OpenSSL (see chapter
+\ref{chp:getting-openssl} if not) and that you are using shared libraries. In
+order to compile our  application the compiler must be able to find the OpenSSL
+header files and the  linker must be able to find the shared libraries.
+Dependant on how you obtained  and installed your version of OpenSSL these may
+already be on the relevant  system paths. Otherwise you have to state them
+explicitly. For this section I  will assume that you are using Linux and that
+you have installed OpenSSL into \verb!\usr\local!. For other Operating
+Systems and locations you will have to adjust the instructions accordingly. You
+can compile the application using:
 
 \begin{verbatim}
-$ gcc -o simpleclient simpleclient.c -I/usr/local/ssl/include \
-      -L/usr/local/ssl/lib -lcrypto -lssl
+$ gcc -o simpleclient simpleclient.c -I/usr/local/include \
+      -L/usr/local/lib -lcrypto -lssl
 \end{verbatim}
 
 \section {Running the application}
@@ -301,7 +282,7 @@ described in section \ref{sec:start-test-server}. Let's see what happens when
 we run it:
 
 \begin{verbatim}
-$ LD_LIBRARY_PATH=/usr/local/ssl/lib ./simpleclient
+$ LD_LIBRARY_PATH=/usr/local/lib ./simpleclient
 139770294548112:error:1416F086:SSL routines:tls_process_server_c
 ertificate:certificate verify failed:statem/statem_clnt.c:1523:
 \end{verbatim}
@@ -319,9 +300,8 @@ Let's examine the various parts of the error message:
 current thread. In our application we are only using one thread so this is not 
 particularly interesting to us.
 \item \texttt{error:1416F086}: This gives us a unique error code for the error
-that we have encountered. This can be useful if you have not loaded the human
-readable error strings by calling \texttt{SSL\_load\_error\_strings()} (see
-below).
+that we have encountered. This can be useful in certain circumstances where
+human readable error strings are not available.
 \item \texttt{SSL routines}: This tells us which component emitted the error. In
 this case ``\texttt{SSL routines}'' means that libssl emitted the error. Other
 possible values could come from one of the many components within libcrypto.
@@ -335,16 +315,6 @@ and line number within the library where the error came from. Again this is
 mainly  useful for OpenSSL developers or people familiar with the OpenSSL
 source code.
 \end{itemize}
-
-If you did not first load the human readable error strings when you initialised 
-the library by calling \verb!SSL_load_error_strings()! then partial error data
-can be obtained from the error code alone using the openssl command line tool:
-
-\begin{verbatim}
-$ openssl errstr 1416F086
-error:1416F086:SSL routines:tls_process_server_certificate:certi
-ficate verify failed
-\end{verbatim}
 
 Another source of information that may help you track down causes of errors is 
 to see if any log output or error messages have been emitted by the peer (i.e. 
@@ -386,7 +356,7 @@ need to add that to our application.
 In order to tell our simple client about which CAs we trust we need to make a 
 slight amendement to our code.
 
-\lstinputlisting[float=tb,label=lst:trusted-cas,firstline=21,lastline=25,
+\lstinputlisting[float=tb,label=lst:trusted-cas,firstline=22,lastline=26,
 caption=Adding Trusted CAs to the client]
 {devel-tls/get-start/simpleclient2.c}
 
@@ -406,7 +376,7 @@ containing certificates. Since we do not need this we just set it to
 Now, if we rerun our application, we should get a successful result:
 
 \begin{verbatim}
-$ LD_LIBRARY_PATH=/usr/local/ssl/lib ./simpleclient
+$ LD_LIBRARY_PATH=/usr/local/lib ./simpleclient
 Success!
 \end{verbatim}
 
@@ -415,7 +385,7 @@ Success!
 Writing a simple server implementation is very similar to a client, but there 
 are also some important differences. See listing \ref{lst:simpleserver}.
 
-\lstinputlisting[float=p,label=lst:simpleserver,lastline=60,
+\lstinputlisting[float=p,label=lst:simpleserver,lastline=54,
 caption=A simple server]
 {devel-tls/get-start/simpleserver.c}
 
@@ -506,7 +476,7 @@ usually be incorporated into a loop of some form such that the server can
 handle connections from multiple clients. The code is provided in listing 
 \ref{lst:listen-for-conn}.
 
-\lstinputlisting[float=tb,label=lst:listen-for-conn,firstline=62,
+\lstinputlisting[float=tb,label=lst:listen-for-conn,firstline=56,
 caption=The \texttt{listen\_for\_connection()} function]
 {devel-tls/get-start/simpleserver.c}
 
@@ -529,7 +499,7 @@ This is the output we get from our server if we use it together with the client
 that we developed at the beginning of this chapter:
 
 \begin{verbatim}
-$ LD_LIBRARY_PATH=/usr/local/ssl/lib ./simpleserver 
+$ LD_LIBRARY_PATH=/usr/local/lib ./simpleserver
 Hello World!
 \end{verbatim}
 
