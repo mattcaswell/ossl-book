@@ -1,10 +1,10 @@
 \chapter{Ciphersuites}
 
-A ciphersuite is a collection of cryptographic primitives (e.g. algorithms for 
+A ciphersuite is a collection of cryptographic primitives (e.g. algorithms for
 encryption; algorithms for digital signatures etc) that can be used
-together in the SSL/TLS protocol. During the intial message from the client 
-(the ``ClientHello'') a list of ciphersuites that the client supports is 
-provided. The server will then select one and communicate back to the client 
+together in the SSL/TLS protocol. During the intial message from the client
+(the ``ClientHello'') a list of ciphersuites that the client supports is
+provided. The server will then select one and communicate back to the client
 which one it wants to use in its response (the ``ServerHello'' message).
 
 OpenSSL 1.1.0 supports many different ciphersuites. A full list of all the
@@ -14,7 +14,7 @@ supported ciphersuites is available by issuing the following command:
 $ openssl ciphers -v ALL:eNULL
 \end{verbatim}
 
-Some sample output is provided in listing \ref{lst:ciphers-extract}. The output 
+Some sample output is provided in listing \ref{lst:ciphers-extract}. The output
 from this command will tell you, for each supported ciphersuite:
 
 \begin{itemize}
@@ -23,8 +23,8 @@ from this command will tell you, for each supported ciphersuite:
 \item The key exchange (Kx) algorithm that it uses.
 \item The authentication (Au) algorithm that it uses.
 \item The encryption (Enc) algorithm that it uses.
-\item The message digest algorithm used within the Message Authentication Code 
-(Mac) algorithm. A value of AEAD here indicates that there is no separate MAC, 
+\item The message digest algorithm used within the Message Authentication Code
+(Mac) algorithm. A value of AEAD here indicates that there is no separate MAC,
 but the encryption algorithm provides integrity protection.
 \end{itemize}
 
@@ -40,90 +40,90 @@ Ciphersuites are configured via a \emph{cipher list}, which determines:
 \item what the order of preference is for those ciphersuites.
 \end{enumerate}
 
-The cipher list is constructed from a sequence of \emph{cipher strings} (also 
+The cipher list is constructed from a sequence of \emph{cipher strings} (also
 known as \emph{aliases}) separated by colons ``\verb!:!''. Each cipher string
 may additionally be modified by a preceding operator to change its meaning
 within the definition of the cipher list.
 
-A cipher string (or alias) simply represents an ordered set of ciphersuites 
+A cipher string (or alias) simply represents an ordered set of ciphersuites
 (with the exception of the ``special'' cipher strings explained below).
 There are four types of cipher string:
 \begin{enumerate}
 \item Simple cipher strings that represent a set containing exactly one
-ciphersuite. The cipher string name is simply name of the ciphersuite. Examples 
-include ``\verb!AES128-CCM!'', ``\verb!DHE-RSA-AES128-GCM-SHA256!'' and 
-``\verb!DES-CBC3-SHA!''.
-\item Complex cipher strings that represent a whole class of ciphersuites. For 
+ciphersuite. The cipher string name is simply the name of the ciphersuite. Examples
+include ``\verb!AES128-SHA!'', ``\verb!ECDHE-RSA-AES256-SHA!'' and
+``\verb!PSK-AES128-GCM-SHA256!''.
+\item Complex cipher strings that represent a whole class of ciphersuites. For
 example ``\verb!AES128!'' represents the set of all ciphersuites that use AES
 128 bit encryption; ``\verb!ECDHE!'' represents the set of all authenticated
 ciphersuites that use ephemeral ECDH key agreement; and ``\verb!eNULL!''
 represents the set of all ciphersuites that provide no encryption at all. Don't
 worry about the specific meanings of what these represent. It will be covered in
 more detail in the rest of this chapter.
-\item Composite cipher strings that represent the intersection of two or more 
-simple or complex cipher strings. Cipher strings of this type are formed by 
-listing each of the constituent cipher strings in turn separated by a 
+\item Composite cipher strings that represent the intersection of two or more
+simple or complex cipher strings. Cipher strings of this type are formed by
+listing each of the constituent cipher strings in turn separated by a
 ``\verb!+!'' character. For example ``\verb!AES128+ECDHE!'' represents the set
 of ciphersuites that use AES 128 bit encryption and also use ephemeral ECDH key
 agreement.
-\item ``Special'' cipher strings. These have a special modifying effect on a 
-cipher list that is being constructed. Examples include ``\verb!@STRENGTH!'' and 
+\item ``Special'' cipher strings. These have a special modifying effect on a
+cipher list that is being constructed. Examples include ``\verb!@STRENGTH!'' and
 ``\verb!@SECLEVEL!''. These will be explained in more detail in the sections
 below.
 \end{enumerate}
 
-The cipher list is defined by combining cipher strings together. By default 
-adding cipher strings onto the end of a cipher list (with each cipher string 
-separated by a colon, ``\verb!:!''), will add the ordered set of ciphers 
-covered by that cipher string onto the end of the list built so far. So, for 
-example, the cipher list ``\verb!AES256:AES128!'' will first add all 
-ciphersuites based on AES 256 bit encryption, and then add all of the 
-ciphersuites based on AES 128 bit encryption, \emph{in that order}. When adding 
-a cipher string onto a cipher list, if a ciphersuite contained within the 
-cipher string is already in the list then that ciphersuite is ignored, i.e. it 
-is not added again. For example the cipher list 
+The cipher list is defined by combining cipher strings together. By default
+adding cipher strings onto the end of a cipher list (with each cipher string
+separated by a colon, ``\verb!:!''), will add the ordered set of ciphers
+covered by that cipher string onto the end of the list built so far. So, for
+example, the cipher list ``\verb!AES256:AES128!'' will first add all
+ciphersuites based on AES 256 bit encryption, and then add all of the
+ciphersuites based on AES 128 bit encryption, \emph{in that order}. When adding
+a cipher string onto a cipher list, if a ciphersuite contained within the
+cipher string is already in the list then that ciphersuite is ignored, i.e. it
+is not added again. For example the cipher list
 ``\verb!AES128-CCM:AES128-SHA:AES128-CCM!'' will contain exactly two
-ciphersuites, ``\verb!AES128-CCM!'' and ``verb!AES128-SHA!'' in that order. The
+ciphersuites, ``\verb!AES128-CCM!'' and ``\verb!AES128-SHA!'' in that order. The
 additional ``\verb!AES128-CCM! on the end has no effect because it is already in
 the cipher list.
 
-Modifiers can be added to the front of cipher strings to change the effect that 
-they have on the cipher list that is being constructed. The available modifiers 
+Modifiers can be added to the front of cipher strings to change the effect that
+they have on the cipher list that is being constructed. The available modifiers
 are:
 \begin{itemize}
-\item \texttt{+} - This has the effect of moving matching ciphersuites that are 
-\emph{already} in the cipher list to the end. It does not add new ciphersuites. 
-For example the cipher list ``\texttt{AES128:+DSS}'' will only contain
-ciphersuites using AES 128 bit encryption, but any of those that also use DSS
+\item \texttt{+} - This has the effect of moving matching ciphersuites that are
+\emph{already} in the cipher list to the end. It does not add new ciphersuites.
+For example the cipher list ``\texttt{AES128:+RSA}'' will only contain
+ciphersuites using AES 128 bit encryption, but any of those that also use RSA
 authentication will be at the end of the list.
-\item \texttt{-} - Removes the ciphersuites in the cipher string from the 
-cipher list. For example the cipher list ``\texttt{RSA:-eNULL}'' will contain 
+\item \texttt{-} - Removes the ciphersuites in the cipher string from the
+cipher list. For example the cipher list ``\texttt{RSA:-eNULL}'' will contain
 the list of all ciphersuites that use RSA authentication \emph{except} those
-that do not use encryption. Ciphersuites removed from the list in this way can 
+that do not use encryption. Ciphersuites removed from the list in this way can
 be added back in again by later cipher strings.
-\item \texttt{!} - Permanently removes the ciphersuites in the cipher string 
-from the cipher list. For example the cipher list ``\texttt{RSA:!eNULL}'' will 
-contain the list of all ciphersuites that use RSA authentication except those 
+\item \texttt{!} - Permanently removes the ciphersuites in the cipher string
+from the cipher list. For example the cipher list ``\texttt{RSA:!eNULL}'' will
+contain the list of all ciphersuites that use RSA authentication except those
 that do no use encryption. No cipher strings added to the end of this list will
 ever add in any ciphersuites that do not use encryption.
 \end{itemize}
 
-Be careful not to confuse the two different uses of the ``\verb!+!'' operator. 
-Dependant on the context, this can either be used to construct a composite 
-cipher string, or to move matching ciphersuites to the end of the list. For 
+Be careful not to confuse the two different uses of the ``\verb!+!'' operator.
+Dependant on the context, this can either be used to construct a composite
+cipher string, or to move matching ciphersuites to the end of the list. For
 example the cipher list ``\verb!AES128+RSA!'' contains all ciphersuites that use
-AES 128 bit encryption \emph{and} RSA authentication. In this context the 
+AES 128 bit encryption \emph{and} RSA authentication. In this context the
 ``\verb!+!'' is being used to form a composite cipher string. However the cipher
-list ``\verb!AES128:+RSA!'' contains all ciphersuites that use AES 128 bit 
-encryption, with any of those that also use RSA authentication moved to the end 
-of the list. In this context the ``\verb!+!'' is being used as a cipher string 
+list ``\verb!AES128:+RSA!'' contains all ciphersuites that use AES 128 bit
+encryption, with any of those that also use RSA authentication moved to the end
+of the list. In this context the ``\verb!+!'' is being used as a cipher string
 modifier.
 
 \subsection{Special cipher strings}
 
-There are two ``special'' cipher strings. The first is ``\verb!@STRENGTH!''. 
-This has the effect of sorting the cipher list that has been built so far by 
-order of the number of security bits each ciphersuite uses for its encryption 
+There are two ``special'' cipher strings. The first is ``\verb!@STRENGTH!''.
+This has the effect of sorting the cipher list that has been built so far by
+order of the number of security bits each ciphersuite uses for its encryption
 key. Mostly the number of security bits in the key and the total number of bits
 in the key is the same thing. So for example AES 128 has a total key length of
 128 bits, and all of those contribute to the number of security bits, i.e. AES
@@ -132,98 +132,101 @@ Triple-DES (also sometimes referred to in OpenSSL ciphersuite names as
 ``\verb!3DES-EDE!'' or ``\verb!DES-CBC3!''). DES has a total key length of 64
 bits, but only 56 of those contribute towards security (the remainder are parity
 bits). Therefore the number of security bits in DES is 56. Triple-DES has a
-total key length of 192 bits. However the number of security bits is 112.
+total key length of 192 bits. However the number of security bits is
+112\footnote{ The DES and Triple-DES ciphersuites are not available in a default
+build of OpenSSL. In order to use them OpenSSL must have been configured at
+build time with the ``enable-weak-ssl-ciphers'' option}.
 
-Note: the ``\verb!@STRENGTH!'' cipher string can be useful but it should be 
+Note: the ``\verb!@STRENGTH!'' cipher string can be useful but it should be
 used with care. There are many factors that contribute towards the overall
 security provided by any given ciphersuite. It is not just about how many
 security bits the encryption key provides. In addition you may also wish to
-consider other factors such as performance, perfect forward secrecy (see 
+consider other factors such as performance, perfect forward secrecy (see
 section \todo{add ref here}) and interoperability.
 
-The other ``special'' cipher string is ``\verb!@SECLEVEL!''. This sets the 
-\emph{security level} to be applied. The security level can be set to any value 
-between 0 and 5 (inclusive). By default the security level is 1. The security 
-level can also be set programmatically by calling 
-\verb!SSL_CTX_set_security_level! or \verb!SSL_set_security_level!. Dependant 
+The other ``special'' cipher string is ``\verb!@SECLEVEL!''. This sets the
+\emph{security level} to be applied. The security level can be set to any value
+between 0 and 5 (inclusive). By default the security level is 1. The security
+level can also be set programmatically by calling
+\verb!SSL_CTX_set_security_level! or \verb!SSL_set_security_level!. Dependant
 on its value, the security level can have the impact of preventing certain
 ciphersuites from ever being selected. Note that the ``\verb!openssl ciphers!''
-command will still show ciphers that are below the current security level 
-unless you additionally use the ``\verb!-s!'' argument. The security levels 
+command will still show ciphers that are below the current security level
+unless you additionally use the ``\verb!-s!'' argument. The security levels
 have the following meanings:
 \begin{itemize}
 \item Level 0: No restrictions
-\item Level 1: 80 bits of security. Encryption algorithms with less than 80 
-security bits will be excluded, as will RSA, DSA and DH keys shorter than 1024 
-bits and ECC\footnote{Elliptic Curve Cryptography (ECC) algorithms are a class 
-of cryptographic algorithms based on the mathematics of elliptic curves. In 
-OpenSSL this includes ECDH/ECDHE and ECDSA.} keys less than 160 bits in length. 
+\item Level 1: 80 bits of security. Encryption algorithms with less than 80
+security bits will be excluded, as will RSA, DSA and DH keys shorter than 1024
+bits and ECC\footnote{Elliptic Curve Cryptography (ECC) algorithms are a class
+of cryptographic algorithms based on the mathematics of elliptic curves. In
+OpenSSL this includes ECDH/ECDHE and ECDSA.} keys less than 160 bits in length.
 Also prohibited is any ciphersuite based on MD5 for its MAC.
-\item Level 2: 112 bits of security.  Encryption algorithms with less than 112 
-security bits will be excluded, as will RSA, DSA and DH keys shorter than 2048 
+\item Level 2: 112 bits of security.  Encryption algorithms with less than 112
+security bits will be excluded, as will RSA, DSA and DH keys shorter than 2048
 bits and ECC keys less than 224 bits in length. Additionally MD5 based MACs,
 SSLv3 and compression are prohibited.
-\item Level 3: 128 bits of security.  Encryption algorithms with less than 128 
-security bits will be excluded, as will RSA, DSA and DH keys shorter than 3072 
+\item Level 3: 128 bits of security.  Encryption algorithms with less than 128
+security bits will be excluded, as will RSA, DSA and DH keys shorter than 3072
 bits and ECC keys less than 256 bits in length. Additionally MD5, SSLv3,
 TLSv1.0, compression and session tickets are prohibited.
-\item Level 4: 192 bits of security. Encryption algorithms with less than 192 
-security bits will be excluded, as will RSA, DSA and DH keys shorter than 7680 
-bits and ECC keys less than 384 bits in length. Additionally MD5 or SHA1 based 
+\item Level 4: 192 bits of security. Encryption algorithms with less than 192
+security bits will be excluded, as will RSA, DSA and DH keys shorter than 7680
+bits and ECC keys less than 384 bits in length. Additionally MD5 or SHA1 based
 MACs, SSLv3, TLSv1.0, TLSv1.1, compression and session tickets are prohibited.
-\item Level 5: 256 bits of security. Encryption algorithms with less than 256 
-security bits will be excluded, as will RSA, DSA and DH keys shorter than 15360 
-bits and ECC keys less than 512 bits in length. Additionally MD5 or SHA1 based 
+\item Level 5: 256 bits of security. Encryption algorithms with less than 256
+security bits will be excluded, as will RSA, DSA and DH keys shorter than 15360
+bits and ECC keys less than 512 bits in length. Additionally MD5 or SHA1 based
 MACs, SSLv3, TLSv1.0, TLSv1.1, compression and session tickets are prohibited.
 \end{itemize}
 
-An example of a cipher list using this is ``\verb!AES256:AES128:@SECLEVEL=3!''. 
-This enables all ciphersuites using AES with 256 or 128 bit keys but will 
-prevent any of those based on RSA, DSA or DH from using keys less than 3072 
+An example of a cipher list using this is ``\verb!AES256:AES128:@SECLEVEL=3!''.
+This enables all ciphersuites using AES with 256 or 128 bit keys but will
+prevent any of those based on RSA, DSA or DH from using keys less than 3072
 bits (amongst the other restrictions listed above).
 
 \section{Ciphersuite selection}
 
-Having built a cipher list of possible ciphers OpenSSL will ignore any that it 
-is not currently capable of supporting. For example the cipher list could 
-include ciphersuites that are not allowed due to the current security level. If 
-OpenSSL is being used as a client then the it will build its ClientHello to 
-contain a list of all those ciphers in the current cipher list and that are 
+Having built a cipher list of possible ciphers OpenSSL will ignore any that it
+is not currently capable of supporting. For example the cipher list could
+include ciphersuites that are not allowed due to the current security level. If
+OpenSSL is being used as a client then the it will build its ClientHello to
+contain a list of all those ciphers in the current cipher list and that are
 currently allowed. They will be in the order of preference as defined in the
 cipher list.
 
-The server will select which of ciphersuites offered by the client will be 
-used. If OpenSSL is used as a server then it can use one of two possible 
+The server will select which of the ciphersuites offered by the client will be
+used. If OpenSSL is used as a server then it can use one of two possible
 algorithms for selecting the ciphersuite:
 \begin{enumerate}
 \item Client preference
 \item Server preference
 \end{enumerate}
 
-The default is to use ``client preference''. With this approach the server will 
-choose the first ciphersuite from the list presented by the client which is 
+The default is to use ``client preference''. With this approach the server will
+choose the first ciphersuite from the list presented by the client which is
 also in the server's cipher list.
 
-If the server is using ``server preference'' then the server will choose the 
-first cipher from its own cipher list which is also in the client's cipher 
+If the server is using ``server preference'' then the server will choose the
+first cipher from its own cipher list which is also in the client's cipher
 list. In order to enable ``server preference'' you should call one of the
 \verb!SSL_CTX_set_options()! or \verb!SSL_set_options()! functions and set
 the \verb!SSL_OP_CIPHER_SERVER_PREFERENCE! option.
 
-Some ciphersuites may need some additional configuration before they become 
-available to clients or servers \emph{even if} they are present in the cipher 
-list. For example a server will never select ECDSA or DSA based ciphersuites if
+Some ciphersuites may need some additional configuration before they become
+available to clients or servers \emph{even if} they are present in the cipher
+list. For example a server will never select ECDSA based ciphersuites if
 it has only been set up with an RSA certificate and key. Similarly it will never
-select an RSA or DSA ciphersuite if it only has an ECDSA certificate and key. It
+select an RSA ciphersuite if it only has an ECDSA certificate and key. It
 is also possible to set up a server with multiple certificates of different
 types to enable more ciphersuites if desired.
 
 \section{Key Exchange}
 
-All ciphersuites define an algorithm for securely exchanging cryptographic 
-keys. Clearly it is important for such an algorithm that it is not possible for 
-any eavesdropper to learn the cryptographic keys that are being exchanged. 
-There are a number of different algorithms that can be used to solve this 
+All ciphersuites define an algorithm for securely exchanging cryptographic
+keys. Clearly it is important for such an algorithm that it is not possible for
+any eavesdropper to learn the cryptographic keys that are being exchanged.
+There are a number of different algorithms that can be used to solve this
 problem. OpenSSL supports the following algorithms:
 \begin{itemize}
 \item RSA
@@ -235,69 +238,41 @@ problem. OpenSSL supports the following algorithms:
 
 \subsection{RSA}
 
-RSA is a public-key encryption system\footnote{Unlike symmetric encryption 
-systems where both parties have the same key in a public-key encryption system 
-there are two keys: a private key and a public key. These two keys are 
-mathematically related to each other but it is not possible to derive the 
-private key if you only know the public key. One party (Alice) generates a 
-private/public key pair and publishes the public key (normally in the form of a 
-certificate). Anyone may see the public key but the private key must be kept 
-secret. Another party (Bob) can encrypt messages destined for Alice using 
-her public key. Alice decrypts them using the private key. No one else is able 
+RSA is a public-key encryption system\footnote{Unlike symmetric encryption
+systems where both parties have the same key in a public-key encryption system
+there are two keys: a private key and a public key. These two keys are
+mathematically related to each other but it is not possible to derive the
+private key if you only know the public key. One party (Alice) generates a
+private/public key pair and publishes the public key (normally in the form of a
+certificate). Anyone may see the public key but the private key must be kept
+secret. Another party (Bob) can encrypt messages destined for Alice using
+her public key. Alice decrypts them using the private key. No one else is able
 to decrypt them because the private key is secret.} that can be used for both
-key exchange and authentication (see section \todo{ref here})\footnote{RSA is 
-not suitable for the main encryption algorithm as it is significantly less 
-performant than most symmetric encryption systems}. When used for key exchange, 
-the client chooses a secret value and then encrypts it using the public key 
-from the server's certificate. The server can then decrypt this value using its 
+key exchange and authentication (see section \todo{ref here})\footnote{RSA is
+not suitable for the main encryption algorithm as it is significantly less
+performant than most symmetric encryption systems}. When used for key exchange,
+the client chooses a secret value and then encrypts it using the public key
+from the server's certificate. The server can then decrypt this value using its
 private key, so both parties now know the same secret.
 
-To enable this key exchange method for OpenSSL servers it is necessary to 
-provide an RSA based certificate and associated private key. Server 
-applications should call \verb!SSL_CTX_use_certificate_file()!, 
-\verb!SSL_CTX_use_PrivateKey_file()! and \verb!SSL_CTX_check_private_key()! as 
-described in section \ref{sec:get-start-setup-ssl-ctx}. There are also variants 
-of these functions to set this up on a per SSL object basis; to load 
-certificates from raw binary (ASN.1) data; or to load them from an OpenSSL 
+To enable this key exchange method for OpenSSL servers it is necessary to
+provide an RSA based certificate and associated private key. Server
+applications should call \verb!SSL_CTX_use_certificate_file()!,
+\verb!SSL_CTX_use_PrivateKey_file()! and \verb!SSL_CTX_check_private_key()! as
+described in section \ref{sec:get-start-setup-ssl-ctx}. There are also variants
+of these functions to set this up on a per SSL object basis; to load
+certificates from raw binary (ASN.1) data; or to load them from an OpenSSL
 \verb!X509! object.
 
 \subsection{DH}
 
-The Diffie-Hellman (DH) key exchange algorithm works in a very different way to 
+The Diffie-Hellman (DH) key exchange algorithm works in a very different way to
 RSA. In this approach both client and server create a private and a public
-value that are mathematically related. It is not possible to derive the private 
-value from the public value. They both exchange their respective public values 
-and perform a mathematical operation to combine their own private value with 
-the public value received from their peer. The result will be the same for both 
-parties and is a shared secret. An eavesdropper will be unable to derive the 
-shared secret because they will not have access to either of the private 
+value that are mathematically related. It is not possible to derive the private
+value from the public value. They both exchange their respective public values
+and perform a mathematical operation to combine their own private value with
+the public value received from their peer. The result will be the same for both
+parties and is a shared secret. An eavesdropper will be unable to derive the
+shared secret because they will not have access to either of the private
 values.
 
-In practice standard (static) DH ciphersuites are almost \emph{never} used, 
-although OpenSSL does support them. They require the presence of a DH
-certificate which are \emph{very} rare. However the DHE variant is commonly used 
-so readers who do not need to understand how to use static DH ciphersuites may
-wish to skip ahead to section \todo{ref here}.
-
-In standard (static) DH the private/public values are reused on the server 
-side. They are taken from a DH based certificate. Normally RSA certificates 
-will be signed by an RSA key from the CA; DSA(DSS)\footnote{The ``Digital 
-Signature Standard (DSS)'' specifies an algorithm for signing known as the 
-``Digital Signature Algorithm (DSA)''} certificates 
-are signed by a DSA key from the CA; and ECDSA certificates are signed by ECDSA 
-keys. However in the case of DH certificates this does not work because the DH
-algorithm is not capable of signing. Therefore a DH certificate must be signed 
-by either an RSA key or a DSA key. They cannot be signed by ECDSA keys because 
-there are no ciphersuites that support this combination\footnote{Historically 
-ciphersuites have been defined that explicitly specify either DH certificates 
-signed with RSA or DH certificate signed with DSA. No such ciphersuites are 
-defined for DH with ECDSA. Theoretically this is possible in TLSv1.2 because 
-the signature algorithm to use is usually specified in the 
-``signature algorithms extension'', which overrides the signature algorithm 
-specified in the ciphersuite. In practice however OpenSSL does not 
-support DH certificates signed by any other algorithm than that specified in 
-the ciphersuite itself.}.
-
-OpenSSL will list ciphersuites using DH key exchange as either DH/DSS or DH/RSA 
-in the ``\verb!Kx!'' column of ``\verb!openssl ciphers -v!'' output, dependant 
-on whether the DH certificate was signed by a DSS or RSA key.
